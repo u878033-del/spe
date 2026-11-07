@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>歡樂節慶對對碰 - 特教民俗節慶互動課堂</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti for Reward Animations -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* 輕量跳動動畫與聚焦邊框 */
+    @keyframes gentle-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-gentle {
+      animation: gentle-bounce 2s infinite ease-in-out;
+    }
+
+    /* 溫和搖晃（答錯時無挫折感提示） */
+    @keyframes gentle-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .shake-gentle {
+      animation: gentle-shake 0.4s ease-in-out;
+    }
+
+    /* 浮起大按鈕陰影效果 */
+    .big-touch-btn {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .big-touch-btn:active {
+      transform: scale(0.96) translateY(4px);
+    }
+  </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 頂部工具與功能切換列 -->
+  <header class="bg-white/90 backdrop-blur border-b-4 border-amber-300 px-4 py-3 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- 主題標題 -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="speakText('歡迎來到民俗節慶樂園！')">
+        <span class="text-4xl">🏮</span>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-black text-amber-800 tracking-wider">歡樂節慶樂園</h1>
+          <p class="text-sm sm:text-base font-bold text-amber-600">社會課：認識傳統節日</p>
+        </div>
+      </div>
+
+      <!-- 模式切換與輔助工具 -->
+      <div class="flex items-center flex-wrap gap-2 sm:gap-3">
+        <!-- 認識模式按鈕 -->
+        <button id="btn-mode-explore" onclick="switchMode('explore')"
+          class="big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-orange-500 text-white border-orange-600 shadow-md">
+          <span>🔍</span>
+          <span>認識節慶</span>
+        </button>
+
+        <!-- 挑戰模式按鈕 -->
+        <button id="btn-mode-quiz" onclick="switchMode('quiz')"
+          class="big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-yellow-100 text-amber-900 border-amber-400 hover:bg-yellow-200 shadow-sm">
+          <span>⭐</span>
+          <span>節慶挑戰</span>
+        </button>
+
+        <!-- 語音開關按鈕 -->
+        <button id="btn-tts-toggle" onclick="toggleSpeech()"
+          title="開啟或關閉語音朗讀"
+          class="big-touch-btn w-14 h-14 rounded-2xl border-4 border-emerald-500 bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl shadow-sm">
+          <span id="tts-icon">🔊</span>
+        </button>
+
+        <!-- 全螢幕切換按鈕（適合電子白板/平板大螢幕） -->
+        <button onclick="toggleFullScreen()"
+          title="全螢幕切換"
+          class="big-touch-btn w-14 h-14 rounded-2xl border-4 border-blue-400 bg-blue-100 text-blue-800 flex items-center justify-center text-2xl shadow-sm">
+          <span>⛶</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 主視覺與互動區域 -->
+  <main class="max-w-6xl w-full mx-auto p-4 sm:p-6 flex-1 flex flex-col justify-center">
+
+    <!-- ============================================== -->
+    <!-- 模式一：【認識探索模式】 -->
+    <!-- ============================================== -->
+    <div id="section-explore" class="w-full flex flex-col gap-6">
+
+      <!-- 引導語音條 -->
+      <div class="bg-amber-100/80 border-4 border-amber-300 rounded-3xl p-4 sm:p-5 flex items-center justify-between shadow-inner">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl sm:text-4xl animate-gentle">👉</span>
+          <p class="text-xl sm:text-2xl font-black text-amber-950">請選一個節慶點點看，聽聽好玩的故事！</p>
+        </div>
+        <button onclick="speakText('請選一個節慶點點看，聽聽好玩的故事！')" class="px-4 py-2 bg-amber-200 border-2 border-amber-400 rounded-xl text-lg font-bold text-amber-900 hover:bg-amber-300">
+          🔊 重聽
+        </button>
+      </div>
+
+      <!-- 三大節慶大卡片選擇區 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <!-- 春節卡片 -->
+        <div id="card-btn-cny" onclick="selectFestival('cny')"
+          class="big-touch-btn cursor-pointer bg-red-50 hover:bg-red-100 border-4 border-red-500 rounded-3xl p-6 text-center shadow-lg transition-transform flex flex-col items-center">
+          <span class="text-7xl sm:text-8xl mb-3 drop-shadow">🧧</span>
+          <h2 class="text-3xl sm:text-4xl font-black text-red-700 mb-2">春 節</h2>
+          <span class="bg-red-500 text-white font-bold text-lg px-4 py-1 rounded-full">農曆新年</span>
+        </div>
+
+        <!-- 端午節卡片 -->
+        <div id="card-btn-dragon" onclick="selectFestival('dragon')"
+          class="big-touch-btn cursor-pointer bg-emerald-50 hover:bg-emerald-100 border-4 border-emerald-500 rounded-3xl p-6 text-center shadow-lg transition-transform flex flex-col items-center">
+          <span class="text-7xl sm:text-8xl mb-3 drop-shadow">🛶</span>
+          <h2 class="text-3xl sm:text-4xl font-black text-emerald-800 mb-2">端午節</h2>
+          <span class="bg-emerald-600 text-white font-bold text-lg px-4 py-1 rounded-full">農曆五月初五</span>
+        </div>
+
+        <!-- 中秋節卡片 -->
+        <div id="card-btn-moon" onclick="selectFestival('moon')"
+          class="big-touch-btn cursor-pointer bg-blue-50 hover:bg-blue-100 border-4 border-blue-500 rounded-3xl p-6 text-center shadow-lg transition-transform flex flex-col items-center">
+          <span class="text-7xl sm:text-8xl mb-3 drop-shadow">🌕</span>
+          <h2 class="text-3xl sm:text-4xl font-black text-blue-800 mb-2">中秋節</h2>
+          <span class="bg-blue-600 text-white font-bold text-lg px-4 py-1 rounded-full">農曆八月十五</span>
+        </div>
+
+      </div>
+
+      <!-- 節慶詳細互動展版（點擊上方卡片後顯示具體物件） -->
+      <div id="festival-detail-box" class="bg-white border-4 border-amber-400 rounded-3xl p-6 sm:p-8 shadow-xl mt-2 transition-all">
+        
+        <!-- 節慶主標題與語音鍵 -->
+        <div class="flex flex-wrap items-center justify-between border-b-4 border-amber-200 pb-4 mb-6 gap-3">
+          <div class="flex items-center gap-4">
+            <span id="detail-main-emoji" class="text-5xl sm:text-6xl">🧧</span>
+            <div>
+              <h3 id="detail-title" class="text-3xl sm:text-4xl font-black text-slate-800">春節（農曆新年）</h3>
+              <p id="detail-subtitle" class="text-xl sm:text-2xl text-slate-600 font-bold mt-1">闔家團圓過新年，拜年拿紅包！</p>
+            </div>
+          </div>
+          <button id="btn-speak-summary" onclick="speakCurrentFestivalSummary()"
+            class="big-touch-btn px-6 py-3 bg-amber-500 hover:bg-amber-600 border-4 border-amber-600 text-white font-black text-xl rounded-2xl shadow flex items-center gap-2">
+            <span>🔊</span>
+            <span>聽整段介紹</span>
+          </button>
+        </div>
+
+        <!-- 應景物件圖文大按鈕區 -->
+        <div class="space-y-4">
+          <p class="text-2xl font-black text-amber-900 flex items-center gap-2">
+            <span>👇</span> 點點看，認識這些節慶食物和習俗：
+          </p>
+
+          <div id="items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 內容由 JavaScript 動態生成渲染 -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- 模式二：【節慶大挑戰模式】 -->
+    <!-- ============================================== -->
+    <div id="section-quiz" class="w-full hidden flex flex-col gap-6">
+
+      <!-- 進度與星星計分版 -->
+      <div class="bg-white border-4 border-amber-400 rounded-3xl p-4 sm:p-6 shadow-md flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl sm:text-4xl">🎯</span>
+          <span class="text-2xl sm:text-3xl font-black text-amber-950">挑戰任務：誰的節慶？</span>
+        </div>
+
+        <!-- 星星獎勵列 -->
+        <div class="flex items-center gap-2 bg-amber-50 px-4 py-2 border-4 border-amber-300 rounded-2xl">
+          <span class="text-xl sm:text-2xl font-black text-amber-900 mr-2">集星進度：</span>
+          <div id="stars-container" class="flex gap-1 text-3xl sm:text-4xl text-amber-300">
+            <!-- 動態生成 5 顆星星 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 挑戰題目卡 -->
+      <div id="quiz-question-card" class="bg-white border-4 border-purple-400 rounded-3xl p-6 sm:p-10 text-center shadow-xl flex flex-col items-center justify-center min-h-[280px]">
+        <div id="quiz-icon" class="text-8xl sm:text-9xl mb-4 animate-gentle drop-shadow">🥮</div>
+        <p class="text-xl sm:text-2xl text-purple-700 font-bold mb-1">請問這是哪一個節日的習俗或美食？</p>
+        <h3 id="quiz-text" class="text-3xl sm:text-5xl font-black text-purple-950 mb-3">吃月餅</h3>
+        
+        <button onclick="speakQuizQuestion()" class="big-touch-btn mt-2 px-5 py-2 rounded-2xl bg-purple-100 border-2 border-purple-400 text-purple-900 font-bold text-lg flex items-center gap-2">
+          <span>🔊</span>
+          <span>唸題目</span>
+        </button>
+      </div>
+
+      <!-- 三個節慶大按鈕選項（超大點擊熱區） -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        <button onclick="handleAnswer('cny')"
+          class="big-touch-btn quiz-option-btn p-6 rounded-3xl border-4 border-red-500 bg-red-100 hover:bg-red-200 active:bg-red-300 flex flex-col items-center justify-center text-center shadow-lg">
+          <span class="text-6xl mb-2">🧧</span>
+          <span class="text-3xl sm:text-4xl font-black text-red-800">春 節</span>
+        </button>
+
+        <button onclick="handleAnswer('dragon')"
+          class="big-touch-btn quiz-option-btn p-6 rounded-3xl border-4 border-emerald-500 bg-emerald-100 hover:bg-emerald-200 active:bg-emerald-300 flex flex-col items-center justify-center text-center shadow-lg">
+          <span class="text-6xl mb-2">🛶</span>
+          <span class="text-3xl sm:text-4xl font-black text-emerald-800">端午節</span>
+        </button>
+
+        <button onclick="handleAnswer('moon')"
+          class="big-touch-btn quiz-option-btn p-6 rounded-3xl border-4 border-blue-500 bg-blue-100 hover:bg-blue-200 active:bg-blue-300 flex flex-col items-center justify-center text-center shadow-lg">
+          <span class="text-6xl mb-2">🌕</span>
+          <span class="text-3xl sm:text-4xl font-black text-blue-800">中秋節</span>
+        </button>
+
+      </div>
+
+      <!-- 答題溫和提示回饋區域 -->
+      <div id="quiz-feedback-box" class="min-h-[60px] flex items-center justify-center">
+        <div id="quiz-feedback-text" class="hidden text-2xl sm:text-3xl font-black px-6 py-3 rounded-2xl shadow-md border-4">
+          <!-- 提示文字 -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 闖關成功大獎盃彈窗 -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white border-8 border-yellow-400 rounded-3xl max-w-lg w-full p-8 text-center shadow-2xl animate-gentle flex flex-col items-center">
+        <span class="text-8xl sm:text-9xl mb-2 drop-shadow">🏆</span>
+        <h2 class="text-4xl sm:text-5xl font-black text-amber-800 mb-3">太棒了！闖關成功！</h2>
+        <p class="text-2xl text-slate-700 font-bold mb-6">你已經成功集滿 5 顆大星星，是民俗節慶小達人！</p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 w-full">
+          <button onclick="speakText('太棒了！你已經成功集滿五顆大星星，是民俗節慶小達人！')"
+            class="big-touch-btn flex-1 py-4 bg-amber-200 border-4 border-amber-400 text-amber-950 font-black text-2xl rounded-2xl">
+            🔊 聽鼓勵
+          </button>
+          <button onclick="restartQuiz()"
+            class="big-touch-btn flex-1 py-4 bg-emerald-500 border-4 border-emerald-600 text-white font-black text-2xl rounded-2xl shadow-lg">
+            🔄 再玩一次
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 底部輔助狀態列 -->
+  <footer class="bg-amber-200/70 border-t-2 border-amber-300 py-3 px-4 text-center">
+    <p class="text-lg font-bold text-amber-900">
+      💡 提示：點擊任何卡片或圖示，都會有清晰的語音朗讀喔！
+    </p>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- 核心教學邏輯、音效與無障礙語音控制 -->
+  <!-- ============================================== -->
+  <script>
+    /* ================= 1. 教學資料庫定義 ================= */
+    const FESTIVAL_DATA = {
+      cny: {
+        id: 'cny',
+        name: '春節',
+        badge: '農曆新年',
+        emoji: '🧧',
+        color: 'red',
+        borderColor: 'border-red-500',
+        bgColor: 'bg-red-50',
+        textColor: 'text-red-700',
+        summary: '春節就是農曆新年！大家會一起除舊布新貼春聯、吃豐盛的年夜飯，長輩還會發紅包給小朋友，象徵平安吉祥！',
+        items: [
+          { name: '拿紅包', emoji: '🧧', desc: '過年時長輩會給我們紅包，祝福平安健康長大。' },
+          { name: '吃年夜飯', emoji: '🍲', desc: '除夕夜全家人聚在一起，吃一頓豐富美味的團圓飯。' },
+          { name: '貼春聯', emoji: '🏮', desc: '在門口貼上紅色的吉祥話，迎接喜氣洋洋的新年。' },
+          { name: '吃水餃與年糕', emoji: '🥟', desc: '水餃像金元寶，年糕代表步步高升，象徵好運旺旺來！' }
+        ]
+      },
+      dragon: {
+        id: 'dragon',
+        name: '端午節',
+        badge: '農曆五月初五',
+        emoji: '🛶',
+        color: 'emerald',
+        borderColor: 'border-emerald-500',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-800',
+        summary: '端午節在天氣漸漸變熱的初夏，大家會一起包粽子、在河邊熱鬧划龍舟，中午還可以挑戰神奇的立蛋喔！',
+        items: [
+          { name: '划龍舟', emoji: '🛶', desc: '大家同心協力划大龍舟，隨著鼓聲往前衝！' },
+          { name: '吃美味粽子', emoji: '🍙', desc: '用竹葉包著香噴噴的糯米和豐富配料，味道真好！' },
+          { name: '端午立蛋', emoji: '🥚', desc: '端午節正中午，據說把雞蛋立在地上可以帶來好運！' },
+          { name: '戴香包插艾草', emoji: '🌿', desc: '掛上香噴噴的香包與艾草，可以驅除蚊蟲保平安。' }
+        ]
+      },
+      moon: {
+        id: 'moon',
+        name: '中秋節',
+        badge: '農曆八月十五',
+        emoji: '🌕',
+        color: 'blue',
+        borderColor: 'border-blue-500',
+        bgColor: 'bg-blue-50',
+        textColor: 'text-blue-800',
+        summary: '中秋節的月亮最圓最亮！這一天大家會一起抬頭賞月，品嚐甜甜的月餅，還會戴上可愛的柚子帽！',
+        items: [
+          { name: '吃月餅', emoji: '🥮', desc: '圓圓甜甜的月餅，象徵全家人幸福圓滿團聚在一起。' },
+          { name: '剝柚子戴柚帽', emoji: '🍐', desc: '中秋節吃香甜的柚子，還可以把柚子皮做成可愛小帽子！' },
+          { name: '全家賞月', emoji: '🌕', desc: '夜晚坐在戶外看天空中又大又圓的明月，非常美麗。' },
+          { name: '可愛玉兔與嫦娥', emoji: '🐇', desc: '傳說月亮上有搗藥的小玉兔和美麗的嫦娥仙子。' }
+        ]
+      }
+    };
+
+    /* 挑戰題庫 (混洗隨機挑選) */
+    const QUIZ_BANK = [
+      { text: '吃美味的月餅', emoji: '🥮', festival: 'moon', festivalName: '中秋節' },
+      { text: '同心協力划龍舟', emoji: '🛶', festival: 'dragon', festivalName: '端午節' },
+      { text: '高興拿紅包', emoji: '🧧', festival: 'cny', festivalName: '春節' },
+      { text: '端午節中午立蛋', emoji: '🥚', festival: 'dragon', festivalName: '端午節' },
+      { text: '晚上抬頭賞大圓月', emoji: '🌕', festival: 'moon', festivalName: '中秋節' },
+      { text: '除夕全家吃團圓飯', emoji: '🍲', festival: 'cny', festivalName: '春節' },
+      { text: '香噴噴的竹葉粽子', emoji: '🍙', festival: 'dragon', festivalName: '端午節' },
+      { text: '剝香甜柚子戴柚帽', emoji: '🍐', festival: 'moon', festivalName: '中秋節' },
+      { text: '門口貼紅春聯', emoji: '🏮', festival: 'cny', festivalName: '春節' },
+      { text: '戴香包驅除蚊蟲', emoji: '🌿', festival: 'dragon', festivalName: '端午節' }
+    ];
+
+    /* ================= 2. 狀態管理 ================= */
+    let currentMode = 'explore'; // 'explore' 或 'quiz'
+    let currentFestival = 'cny';
+    let isSpeechEnabled = true;
+    let quizStars = 0;
+    let currentQuizIndex = 0;
+    let shuffledQuizList = [];
+
+    /* ================= 3. 音效合成器 (Web Audio API) ================= */
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // 正向答對清脆音效（高雙音）
+    function playSuccessSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        // 第一個高音
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'triangle';
+        osc1.frequency.setValueAtTime(523.25, now); // C5
+        gain1.gain.setValueAtTime(0.25, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.2);
+
+        // 第二個更高音 (慶祝感)
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'triangle';
+        osc2.frequency.setValueAtTime(659.25, now + 0.15); // E5
+        gain2.gain.setValueAtTime(0.25, now + 0.15);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.45);
+      } catch (e) {
+        console.warn('音效播放失敗:', e);
+      }
+    }
+
+    // 溫和引導音效（低沉無威脅感短音，不造成挫折）
+    function playTryAgainSound() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(329.63, now); // E4 溫和音
+        osc.frequency.linearRampToValueAtTime(261.63, now + 0.25); // 滑向 C4
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } catch (e) {
+        console.warn('音效播放失敗:', e);
+      }
+    }
+
+    /* ================= 4. 語音朗讀輔助 (Web Speech API) ================= */
+    function speakText(text) {
+      if (!isSpeechEnabled || !('speechSynthesis' in window)) return;
+
+      // 停止先前正在朗讀的聲音，避免聲音重疊混亂
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      utterance.rate = 0.85; // 特教需求：稍微放慢語速，吐字更清楚
+      utterance.pitch = 1.05; // 柔和親切聲調
+
+      // 嘗試選取繁體中文語音庫
+      const voices = window.speechSynthesis.getVoices();
+      const twVoice = voices.find(v => v.lang.includes('zh-TW') || v.lang.includes('TW') || v.lang.includes('cmn-Hant-TW'));
+      if (twVoice) {
+        utterance.voice = twVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function toggleSpeech() {
+      isSpeechEnabled = !isSpeechEnabled;
+      const ttsIcon = document.getElementById('tts-icon');
+      const ttsBtn = document.getElementById('btn-tts-toggle');
+
+      if (isSpeechEnabled) {
+        ttsIcon.textContent = '🔊';
+        ttsBtn.classList.remove('bg-gray-200', 'border-gray-400', 'text-gray-600');
+        ttsBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+        speakText('語音功能已開啟');
+      } else {
+        window.speechSynthesis.cancel();
+        ttsIcon.textContent = '🔇';
+        ttsBtn.classList.remove('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+        ttsBtn.classList.add('bg-gray-200', 'border-gray-400', 'text-gray-600');
+      }
+    }
+
+    /* ================= 5. 模式切換邏輯 ================= */
+    function switchMode(mode) {
+      currentMode = mode;
+      const btnExplore = document.getElementById('btn-mode-explore');
+      const btnQuiz = document.getElementById('btn-mode-quiz');
+      const secExplore = document.getElementById('section-explore');
+      const secQuiz = document.getElementById('section-quiz');
+
+      if (mode === 'explore') {
+        btnExplore.className = "big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-orange-500 text-white border-orange-600 shadow-md";
+        btnQuiz.className = "big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-yellow-100 text-amber-900 border-amber-400 hover:bg-yellow-200 shadow-sm";
+        secExplore.classList.remove('hidden');
+        secQuiz.classList.add('hidden');
+        speakText('進入認識節慶模式，點選節慶卡片開始探索吧！');
+      } else {
+        btnQuiz.className = "big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-purple-600 text-white border-purple-700 shadow-md";
+        btnExplore.className = "big-touch-btn flex items-center gap-2 px-4 py-3 rounded-2xl border-4 font-black text-lg sm:text-xl bg-yellow-100 text-amber-900 border-amber-400 hover:bg-yellow-200 shadow-sm";
+        secExplore.classList.add('hidden');
+        secQuiz.classList.remove('hidden');
+        initQuizGame();
+      }
+    }
+
+    /* ================= 6. 認識探索模式邏輯 ================= */
+    function selectFestival(key) {
+      currentFestival = key;
+      const fest = FESTIVAL_DATA[key];
+      if (!fest) return;
+
+      // 更新卡片外框視覺亮顯
+      ['cny', 'dragon', 'moon'].forEach(fKey => {
+        const card = document.getElementById(`card-btn-${fKey}`);
+        if (fKey === key) {
+          card.classList.add('ring-4', 'ring-offset-2', 'ring-amber-500', 'scale-105');
+        } else {
+          card.classList.remove('ring-4', 'ring-offset-2', 'ring-amber-500', 'scale-105');
+        }
+      });
+
+      // 更新詳細展板內容
+      document.getElementById('detail-main-emoji').textContent = fest.emoji;
+      document.getElementById('detail-title').textContent = `${fest.name}（${fest.badge}）`;
+      document.getElementById('detail-subtitle').textContent = fest.summary;
+
+      // 動態產生 4 個代表物件的大按鈕
+      const grid = document.getElementById('items-grid');
+      grid.innerHTML = '';
+
+      fest.items.forEach(item => {
+        const itemBtn = document.createElement('div');
+        itemBtn.className = "big-touch-btn cursor-pointer bg-amber-50 hover:bg-amber-100 border-4 border-amber-300 hover:border-amber-500 rounded-3xl p-5 text-center shadow-md transition-all flex flex-col items-center justify-center";
+        itemBtn.onclick = () => {
+          playSuccessSound();
+          speakText(`${item.name}。${item.desc}`);
+        };
+
+        itemBtn.innerHTML = `
+          <span class="text-6xl sm:text-7xl mb-3 drop-shadow">${item.emoji}</span>
+          <h4 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">${item.name}</h4>
+          <p class="text-base sm:text-lg font-bold text-slate-600 line-clamp-3">${item.desc}</p>
+          <div class="mt-3 inline-flex items-center gap-1 text-sm font-bold text-amber-700 bg-amber-200/80 px-3 py-1 rounded-full">
+            <span>🔊 點我聽發音</span>
+          </div>
+        `;
+        grid.appendChild(itemBtn);
+      });
+
+      // 朗讀節慶簡介
+      speakText(`${fest.name}。${fest.summary}`);
+    }
+
+    function speakCurrentFestivalSummary() {
+      const fest = FESTIVAL_DATA[currentFestival];
+      if (fest) {
+        speakText(`${fest.name}。${fest.summary}`);
+      }
+    }
+
+    /* ================= 7. 節慶挑戰闖關小遊戲 ================= */
+    function initQuizGame() {
+      quizStars = 0;
+      updateStarsUI();
+      // 洗牌題目
+      shuffledQuizList = [...QUIZ_BANK].sort(() => Math.random() - 0.5);
+      currentQuizIndex = 0;
+      document.getElementById('victory-modal').classList.add('hidden');
+      loadQuizQuestion();
+    }
+
+    function loadQuizQuestion() {
+      if (currentQuizIndex >= shuffledQuizList.length) {
+        currentQuizIndex = 0; // 若題庫循環完畢則重置索引
+      }
+
+      const q = shuffledQuizList[currentQuizIndex];
+      document.getElementById('quiz-icon').textContent = q.emoji;
+      document.getElementById('quiz-text').textContent = q.text;
+
+      // 隱藏回饋字卡
+      const fbBox = document.getElementById('quiz-feedback-text');
+      fbBox.className = "hidden";
+
+      // 朗讀題目
+      speakQuizQuestion();
+    }
+
+    function speakQuizQuestion() {
+      const q = shuffledQuizList[currentQuizIndex];
+      if (q) {
+        speakText(`請問：${q.text}，是哪一個節日呢？`);
+      }
+    }
+
+    function updateStarsUI() {
+      const container = document.getElementById('stars-container');
+      container.innerHTML = '';
+      for (let i = 0; i < 5; i++) {
+        const star = document.createElement('span');
+        if (i < quizStars) {
+          star.textContent = '⭐';
+          star.className = 'scale-110 transition-transform';
+        } else {
+          star.textContent = '☆';
+          star.className = 'text-amber-200';
+        }
+        container.appendChild(star);
+      }
+    }
+
+    function handleAnswer(selectedFestival) {
+      const q = shuffledQuizList[currentQuizIndex];
+      const fbBox = document.getElementById('quiz-feedback-text');
+      const card = document.getElementById('quiz-question-card');
+
+      if (selectedFestival === q.festival) {
+        // ========== 答對了！正向回饋 ==========
+        playSuccessSound();
+        quizStars++;
+        updateStarsUI();
+
+        // 彩花紙屑特效
+        confetti({
+          particleCount: 50,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
+        fbBox.className = "block bg-emerald-100 border-emerald-500 text-emerald-900 text-2xl sm:text-3xl font-black px-6 py-3 rounded-2xl shadow-md";
+        fbBox.textContent = `🎉 答對了！就是【${q.festivalName}】！`;
+        speakText(`太棒了！答對了！這是${q.festivalName}！`);
+
+        // 檢查是否集滿 5 顆星星獲勝
+        if (quizStars >= 5) {
+          setTimeout(() => {
+            showVictoryModal();
+          }, 1200);
+        } else {
+          // 延遲後換下一題
+          setTimeout(() => {
+            currentQuizIndex++;
+            loadQuizQuestion();
+          }, 1800);
+        }
+
+      } else {
+        // ========== 溫和提示（無挫折、不扣分） ==========
+        playTryAgainSound();
+        card.classList.add('shake-gentle');
+        setTimeout(() => card.classList.remove('shake-gentle'), 500);
+
+        fbBox.className = "block bg-amber-100 border-amber-400 text-amber-900 text-2xl sm:text-3xl font-black px-6 py-3 rounded-2xl shadow-md";
+        fbBox.textContent = `💛 想想看，再試一次看看喔！`;
+        speakText('沒關係，再試一次看看喔！');
+      }
+    }
+
+    function showVictoryModal() {
+      // 盛大的過關彩花瀑布
+      confetti({
+        particleCount: 120,
+        spread: 100,
+        origin: { y: 0.4 }
+      });
+      document.getElementById('victory-modal').classList.remove('hidden');
+      speakText('太棒了！恭喜你集滿五顆大星星，是民俗節慶小達人！');
+    }
+
+    function restartQuiz() {
+      initQuizGame();
+    }
+
+    /* ================= 8. 全螢幕模式控制 ================= */
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn(`全螢幕切換失敗: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    /* ================= 9. 頁面加載初始化 ================= */
+    window.onload = function() {
+      // 預設選取春節
+      selectFestival('cny');
+      
+      // 預載瀏覽器語音庫
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    };
+  </script>
+</body>
+</html>
